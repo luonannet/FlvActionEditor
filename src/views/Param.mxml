@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"  currentState="none">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			import jing.framework.manager.notice.NoticeManager;
+			
+			import notices.ElemntNotice;
+			
+			import vos.ElementVO;
+			
+			[Bindable]
+			private var _conditions:ArrayCollection = new ArrayCollection(["鼠标单击","鼠标移上","鼠标双击","鼠标悬停","鼠标双击"]);
+			
+			[Bindable]
+			private var _events:ArrayCollection = new ArrayCollection(["继续播放","展示动画","跳转播放时间","变色","闪烁"]);
+			
+			[Bindable]
+			private var _vo:ElementVO;
+			public function update(vo:ElementVO = null):void
+			{
+				_vo = vo;
+				if(vo)
+				{
+					this.currentState = vo.type;
+				}
+				else
+				{
+					this.currentState = "none";
+				}
+			}
+			
+			protected function ti_changeHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				_vo.label = ti.text;
+				NoticeManager.sendNotice(new ElemntNotice(ElemntNotice.UPDATED,_vo));
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:states>
+		<s:State name="none" />
+		<s:State name="label" />
+		<s:State name="img" />
+	</s:states>
+
+	<s:HGroup paddingTop="5" paddingLeft="5" paddingRight="5" paddingBottom="5" width="100%" gap="20" height="100%">
+		<s:HGroup includeIn="label">
+			<s:Label text="label:" />
+			<mx:TextInput id="ti" text="{_vo.label}" change="ti_changeHandler(event)" />
+		</s:HGroup>
+	
+		<s:VGroup width="100" excludeFrom="none" height="100%">
+			<s:Label text="交互条件:" />
+			<s:List dataProvider="{_conditions}" width="100%" height="100%" />
+		</s:VGroup>
+		
+		<s:VGroup width="100" excludeFrom="none" height="100%">
+			<s:Label text="交互行为:" />
+			<s:List dataProvider="{_events}" width="100%" height="100%" />
+		</s:VGroup>
+	</s:HGroup>
+</s:Group>

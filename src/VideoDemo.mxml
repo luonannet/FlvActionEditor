@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" creationComplete="application1_creationCompleteHandler(event)" addedToStage="application1_addedToStageHandler(event)" xmlns:views="views.*">
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			import core.ModelCenter;
+			
+			import jing.framework.manager.notice.NoticeManager;
+			
+			import notices.ElemntNotice;
+			
+			import org.osmf.events.MediaPlayerStateChangeEvent;
+			import org.osmf.events.TimeEvent;
+			
+			import views.elements.AElement;
+			import views.elements.VImage;
+			import views.elements.VLabel;
+			
+			import vos.ElementVO;
+			import vos.FrameVO;
+			import vos.UIType;
+			
+			private var _dragingEle:AElement;
+			
+			protected function vp_currentTimeChangeHandler(event:TimeEvent):void
+			{
+				var time:int = vpTime;
+				// TODO Auto-generated method stub
+				trace("当前时间：",time);
+				var frames:Dictionary = ModelCenter.frames;
+				var framerVO:FrameVO = frames[time];
+				
+				if(null != framerVO)
+				{
+//					vp.seek(framerVO.time);
+					trace("时间：",framerVO.time);
+				}
+				showFramer(framerVO);
+				nsSeconds.value = vpTime;
+			}
+			
+			protected function vp_mediaPlayerStateChangeHandler(event:MediaPlayerStateChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				trace("状态改变:",vp.mediaPlayerState);
+			}
+			
+			protected function vp_durationChangeHandler(event:TimeEvent):void
+			{
+				// TODO Auto-generated method stub
+				trace("播放持续时间：", vp.duration);
+			}
+			
+			protected function test_clickHandler(event:MouseEvent):void
+			{
+				vp.seek(10);
+			}
+			
+			protected function _btnRegion_clickHandler(event:MouseEvent):void
+			{
+				
+			}
+			
+			protected function _btnLabel_mouseDownHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				newUI(UIType.LABEL);
+			}
+			
+			private function newUI(type:String):void
+			{
+				if(vp.playing)
+				{
+					vp.pause();
+				}
+				var vo:ElementVO = new ElementVO();
+				vo.type = type;
+				vo.x = mouseX;
+				vo.y = mouseY;
+				
+				var ui:AElement
+				switch(type)
+				{
+					case UIType.LABEL:
+						ui = new VLabel(vo);
+						break;
+					case UIType.IMG:
+						ui = new VImage(vo);
+						break;
+				}
+				
+
+				
+				_dragingEle = ui;
+				if(ui)
+				{
+					this.addElement(ui);
+					_dragingEle.mouseEnabled = false;
+				}
+			}
+			
+			protected function _btnSeak_clickHandler(event:MouseEvent):void
+			{
+
+			}
+			
+			protected function application1_creationCompleteHandler(event:FlexEvent):void
+			{
+				_vpMask.graphics.beginFill(0x0000FF,0);
+				_vpMask.graphics.drawRect(0,0,_vpMask.width,_vpMask.height);
+				_vpMask.graphics.endFill();
+				
+
+			}
+			
+			private function stage_mouseMoveHandler(e:MouseEvent):void
+			{
+				if(_dragingEle)
+				{
+					_dragingEle.x = mouseX;
+					_dragingEle.y = mouseY;
+					trace(_dragingEle.width,_dragingEle.height);
+				}
+			}
+			
+			private function stage_mouseLeaveHandler(e:Event):void
+			{
+				stage_mouseUpHandler(e);
+			}
+			
+			private function stage_mouseUpHandler(e:Event):void
+			{
+				if(_dragingEle)
+				{
+					this.removeElement(_dragingEle);
+					_dragingEle = null;
+				}
+			}
+			
+			protected function _vpMask_mouseUpHandler(event:MouseEvent):void
+			{
+				if(_dragingEle)
+				{
+					var framerVO:FrameVO = ModelCenter.frames[vpTime];
+					if(null == framerVO)
+					{
+						framerVO = new FrameVO();
+						ModelCenter.frames[vpTime] = framerVO;
+						framerVO.time = vpTime;
+					}
+					
+					var elementVO:ElementVO = _dragingEle.vo;
+					elementVO.x = _vpMask.mouseX;
+					elementVO.y = _vpMask.mouseY;
+					if(framerVO.elements.indexOf(elementVO) == -1)
+					{
+						framerVO.elements.push(elementVO);
+					}
+					showFramer(framerVO);
+					_param.update(elementVO);
+					updateList();
+				}				
+			}
+			
+			private function updateList():void
+			{
+				var frames:Array = new Array();
+				for each(var frame:FrameVO in ModelCenter.frames)
+				{
+					frames.push(frame);
+				}
+				frames = frames.sort(compareTime);
+				_listEvent.dataProvider = new ArrayCollection(frames);
+			}
+			
+			private function compareTime(a:FrameVO,b:FrameVO):Number
+			{
+				if(a.time < b.time)
+				{
+					return -1;
+				}
+				else
+				{
+					return 1;
+				}
+				return 0;
+			}
+			
+			private function showFramer(framerVO:FrameVO):void
+			{
+				_vpMask.removeChildren();
+				if(null == framerVO)
+				{
+					return;
+				}
+//				vp.seek(framerVO.time);
+				for each(var eleVO:ElementVO in framerVO.elements)
+				{
+					var ele:AElement;
+					switch(eleVO.type)
+					{
+						case UIType.LABEL:
+							ele = new VLabel(eleVO); 
+							break;
+						case UIType.IMG:
+							ele = new VImage(eleVO); 
+							break;
+					}
+					if(ele)
+					{
+						_vpMask.addChild(ele);
+//						vp.pause();
+					}
+				}
+				
+			}
+			
+			protected function application1_addedToStageHandler(event:Event):void
+			{
+				stage.addEventListener(MouseEvent.MOUSE_UP, stage_mouseUpHandler);
+				stage.addEventListener(Event.MOUSE_LEAVE, stage_mouseLeaveHandler);
+				stage.addEventListener(MouseEvent.MOUSE_MOVE, stage_mouseMoveHandler);
+				NoticeManager.addNoticeAction(ElemntNotice.BEGIN_DRAG, beginDrageNoticeHandler);
+				NoticeManager.addNoticeAction(ElemntNotice.UPDATED, elementUpdatedNoticeHandler);
+				
+			}
+			
+			private function elementUpdatedNoticeHandler(n:ElemntNotice):void
+			{
+				var vo:ElementVO = n.data;
+				showFramer(ModelCenter.frames[vpTime]);
+			}
+			
+			public function get vpTime():int
+			{
+				return int(vp.currentTime);
+			}
+			
+			private function beginDrageNoticeHandler(n:ElemntNotice):void
+			{
+				var ele:AElement = n.data;
+				if(ele)
+				{
+					this.addElement(ele);
+					_dragingEle = ele;
+					_dragingEle.mouseEnabled = false;
+					_param.update(ele.vo);
+				}
+				
+			}
+			
+			protected function nsSeconds_changeHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				vp.pause();
+				var time:int = int(nsSeconds.value);
+				vp.seek(time);
+//				showFramer(ModelCenter.frames[time]);
+				
+			}
+			
+			protected function _listEvent_changeHandler(event:IndexChangeEvent):void
+			{
+				var frameVO:FrameVO = _listEvent.selectedItem as FrameVO;
+				if(frameVO)
+				{
+					vp.pause();
+					vp.seek(frameVO.time);
+//					showFramer(frameVO);
+				}
+			}
+			
+			protected function _btnImage_mouseDownHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				newUI(UIType.IMG);
+			}
+			
+			protected function _btnMovie_mouseDownHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				newUI(UIType.MOVIE);
+			}
+			
+		]]>
+	</fx:Script>
+	<s:VGroup width="100%" height="100%">
+		<views:Header />
+		<s:HGroup width="100%" height="100%">
+			<s:VGroup height="100%" width="200">
+				<s:Panel width="100%" title="时间控制" height="80">
+					<s:HGroup verticalAlign="middle" paddingTop="5" paddingBottom="5" paddingLeft="5" paddingRight="5">
+						<s:Label text="定位时间" />
+						<s:NumericStepper id="nsSeconds" maximum="9999" change="nsSeconds_changeHandler(event)" />
+						<s:Label text="秒" />
+					</s:HGroup>
+				</s:Panel>
+				
+				<s:Panel title="已设置内容" width="200" height="100%">
+					<s:VGroup paddingTop="5" paddingBottom="5" paddingLeft="5" paddingRight="5" width="100%" height="100%">
+						<s:List id="_listEvent" height="100%" width="100%" labelField="time" change="_listEvent_changeHandler(event)" />
+					</s:VGroup>
+				</s:Panel>
+			</s:VGroup>
+
+			<s:VGroup width="100%" height="100%" horizontalAlign="center">
+				<s:Group width="500" height="400">			
+					<s:VideoPlayer 
+						id="vp"
+						source="assets/yida.flv"
+						width="100%" height="100%"
+						autoPlay="false"
+						loop="false" currentTimeChange="vp_currentTimeChangeHandler(event)" mediaPlayerStateChange="vp_mediaPlayerStateChangeHandler(event)" durationChange="vp_durationChangeHandler(event)"/>
+					<mx:UIComponent id="_vpMask" width="100%" height="{vp.height - 20}" mouseUp="_vpMask_mouseUpHandler(event)" />
+				</s:Group>
+				
+				<s:Panel id="panel" title="属性" height="100%" width="100%">
+					<views:Param id="_param" width="100%" height="100%">
+						
+					</views:Param>
+				</s:Panel>
+			</s:VGroup>
+			<s:VGroup width="150" height="100%">
+				<s:Panel title="控件" width="150" height="100%">
+					<s:VGroup width="100%" paddingTop="5" paddingBottom="5" paddingLeft="5" paddingRight="5" horizontalAlign="center">
+						<s:Image width="100" height="100" source="assets/text.png" mouseDown="_btnLabel_mouseDownHandler(event)" toolTip="文本" />
+						<s:Image width="100" height="100" source="assets/image.png" mouseDown="_btnImage_mouseDownHandler(event)" toolTip="图片" />
+						<s:Image width="100" height="100" source="assets/movie.png" mouseDown="_btnMovie_mouseDownHandler(event)" toolTip="音视频" />
+					</s:VGroup>
+				</s:Panel>
+				<s:TextArea editable="false" width="150">
+					在控件上按下鼠标左键进行拖动到视频上即可开始编辑。该DEMO因为时间仓促，只供验证技术可行性。
+				</s:TextArea>
+			</s:VGroup>
+		</s:HGroup>
+	</s:VGroup>
+</s:Application>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   width="100%" height="100" borderVisible="false" dropShadowVisible="false">
+	<s:backgroundFill>
+		<s:LinearGradient rotation="90">
+			<s:entries>
+				<s:GradientEntry color="0xe7e7e7" ratio="0.00" alpha="0.5"/>
+				<s:GradientEntry color="0xcccccc" ratio="0.33" alpha="0.5"/>
+				<s:GradientEntry color="0xe7e7e7" ratio="0.66" alpha="0.5"/>
+			</s:entries>
+
+		</s:LinearGradient>
+	</s:backgroundFill>
+	<s:layout>
+		<s:HorizontalLayout verticalAlign="middle"/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<s:Image y="-28" width="100" height="100" scaleMode="letterbox"
+			 source="@Embed('assets/books.png')"/>
+	<s:Label fontSize="23" text="课件编辑器"/>
+	<s:Spacer width="60" height="10"/>
+	<s:VGroup width="100%" height="100%" gap="2" paddingRight="5">
+		 
+			
+	<mx:MenuBar labelField="@label"   backgroundSkin="head.MenuBarSkin" >
+	<mx:dataProvider>
+		<fx:XMLList xmlns=""> 
+				<item label="文件">
+					<item label="新建">
+						
+						
+					</item>	
+					<item label="保存">
+						
+						
+					</item>	
+				</item>	
+				
+				<item label="编辑">
+					<item label="撤销">
+						
+						
+					</item>	
+					<item label="删除">
+						
+						
+					</item>	
+				</item>	 
+			<item label="视图">
+				
+				
+			</item>	
+			<item label="帮助">
+				<item label="说明">
+					
+					
+				</item>	
+				<item label="关于">
+					
+					
+				</item>	
+				<item label="联系作者">
+					
+					
+				</item>	
+			</item>	
+			<item label="打印">
+				
+				
+			</item>	
+		</fx:XMLList>
+	</mx:dataProvider></mx:MenuBar> 
+		<s:BorderContainer borderVisible="false" width="100%" height="68"  >
+			<s:layout>
+				<s:HorizontalLayout horizontalAlign="right" verticalAlign="middle"/>
+			</s:layout>
+			<s:Image source="assets/textAlign.png"/>
+			
+		</s:BorderContainer>
+		<s:Spacer width="10" height="1"/>
+		
+	</s:VGroup>
+</s:BorderContainer>
